@@ -18,23 +18,12 @@ from sqlmodel import Session, select
 from uuid import UUID
 from app.models.database import Budget, BudgetBill, Account, Bill, Transactions, ApplicationSettings, get_session
 from app.models.schemas import BudgetCreate, BudgetUpdate, BudgetBillCreate, BudgetBillUpdate
-from app.utils import utc_now, to_utc
+from app.utils import utc_now, to_utc, ensure_aware_utc
 
 # Type alias for UUID7
 UUID7 = UUID
 
 router = APIRouter(prefix="/budgets", tags=["budgets"])
-
-
-def _ensure_aware_utc(dt):
-    """Coerce date/datetime to timezone-aware UTC for safe comparisons."""
-    if dt is None:
-        return None
-    if isinstance(dt, date) and not isinstance(dt, datetime):
-        dt = datetime.combine(dt, datetime.min.time())
-    if dt.tzinfo is None:
-        return dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc)
 
 
 @router.post("/", response_model=Budget)
@@ -55,8 +44,8 @@ def create_budget(budget: BudgetCreate, session: Session = Depends(get_session))
         HTTPException: 400 if budget overlaps with existing budget
     """
     # Normalize new budget dates to UTC for storage (ensure aware)
-    new_start = _ensure_aware_utc(to_utc(budget.start_date))
-    new_end = _ensure_aware_utc(to_utc(budget.end_date))
+    new_start = ensure_aware_utc(to_utc(budget.start_date))
+    new_end = ensure_aware_utc(to_utc(budget.end_date))
     new_start_ts = new_start.timestamp()
     new_end_ts = new_end.timestamp()
     
@@ -65,8 +54,8 @@ def create_budget(budget: BudgetCreate, session: Session = Depends(get_session))
     existing_budgets = session.exec(select(Budget)).all()
     
     for existing in existing_budgets:
-        existing_start = _ensure_aware_utc(existing.start_date)
-        existing_end = _ensure_aware_utc(existing.end_date)
+        existing_start = ensure_aware_utc(existing.start_date)
+        existing_end = ensure_aware_utc(existing.end_date)
 
         if not existing_start or not existing_end:
             continue
@@ -120,8 +109,8 @@ def update_budget(
     
     # If dates are being updated, check for overlaps with other budgets
     if budget_update.start_date or budget_update.end_date:
-        new_start_date = _ensure_aware_utc(to_utc(budget_update.start_date) if budget_update.start_date else budget.start_date)
-        new_end_date = _ensure_aware_utc(to_utc(budget_update.end_date) if budget_update.end_date else budget.end_date)
+        new_start_date = ensure_aware_utc(to_utc(budget_update.start_date) if budget_update.start_date else budget.start_date)
+        new_end_date = ensure_aware_utc(to_utc(budget_update.end_date) if budget_update.end_date else budget.end_date)
         new_start_ts = new_start_date.timestamp()
         new_end_ts = new_end_date.timestamp()
         
@@ -129,8 +118,8 @@ def update_budget(
         existing_budgets = session.exec(select(Budget).where(Budget.id != budget_id)).all()
         
         for existing in existing_budgets:
-            existing_start = _ensure_aware_utc(existing.start_date)
-            existing_end = _ensure_aware_utc(existing.end_date)
+            existing_start = ensure_aware_utc(existing.start_date)
+            existing_end = ensure_aware_utc(existing.end_date)
 
             if not existing_start or not existing_end:
                 continue
