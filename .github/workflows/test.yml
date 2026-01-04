@@ -27,6 +27,19 @@ jobs:
         tags: mybudget:test
         no-cache: true
 
+    - name: Verify package versions
+      run: |
+        docker run --rm \
+          mybudget:test \
+          sh -c "python -c \"import sqlalchemy, sqlmodel; print(f'SQLAlchemy: {sqlalchemy.__version__}'); print(f'SQLModel: {sqlmodel.__version__}')\""
+
+    - name: Check database.py in Docker
+      run: |
+        docker run --rm \
+          -v ${{ github.workspace }}:/app \
+          mybudget:test \
+          sh -c "grep -A 2 'budget_bills:' /app/app/models/database.py"
+
     - name: Run tests in Docker
       run: |
         docker run --rm \
