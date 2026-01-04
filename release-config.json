@@ -1,8 +1,10 @@
 {
   "release-type": "simple",
+  "include-component-in-tag": false,
   "bump-minor-pre-major": false,
   "bump-patch-for-minor-pre-major": false,
   "always-link-local": false,
+  "pull-request-title-pattern": "chore: release${component} ${version}",
   "changelog-sections": [
     {
       "type": "feat",
@@ -27,6 +29,16 @@
     {
       "type": "docs",
       "section": "Documentation",
+      "hidden": false
+    },
+    {
+      "type": "ci",
+      "section": "CI/CD",
+      "hidden": false
+    },
+    {
+      "type": "build",
+      "section": "Build",
       "hidden": false
     },
     {
