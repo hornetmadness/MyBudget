@@ -46,7 +46,7 @@ jobs:
           -v ${{ github.workspace }}:/app \
           mybudget:test \
           sh -c "cd /app && \
-                 python -m uvicorn main:app --host 0.0.0.0 --port 8000 > /tmp/api.log 2>&1 & \
+                 python -m uvicorn main:app --host 0.0.0.0 --port 8000 & \
                  API_PID=\$!; \
                  echo 'API started with PID:' \$API_PID; \
                  sleep 3; \
