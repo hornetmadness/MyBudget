@@ -176,10 +176,7 @@ class Budget(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=utc_now)
     
     # Relationships - explicitly define the join condition
-    budget_bills: List["BudgetBill"] = Relationship(
-        back_populates="budget",
-        sa_relationship_kwargs={"foreign_keys": "[BudgetBill.budget_id]"}
-    )
+    budget_bills: List["BudgetBill"] = Relationship(back_populates="budget")
 
 
 class BudgetBill(SQLModel, table=True):
