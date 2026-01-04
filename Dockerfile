@@ -1,16 +1,17 @@
-# Python 3.12 Alpine image as base (matches README recommendation)
-FROM python:3.12-alpine
+# Python 3.12 Debian Slim image (better compatibility than Alpine)
+FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 # System deps for building wheels and SQLite support
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     musl-dev \
     libffi-dev \
-    openssl-dev \
-    sqlite-dev
+    openssl \
+    sqlite3 \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
