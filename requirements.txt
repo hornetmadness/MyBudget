@@ -6,4 +6,4 @@ pytest>=7.0
 pytest-httpx>=0.21.0
 nicegui>=1.4.0
 markdown>=3.10
-uuid-utils>=1.0.0
+uuid-utils>=0.12.0
