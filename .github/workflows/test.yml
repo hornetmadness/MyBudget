@@ -13,6 +13,10 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.12']
+    
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}
 
     steps:
     - uses: actions/checkout@v4
@@ -30,6 +34,8 @@ jobs:
 
     - name: Verify Python version
       run: |
+        pwd
+        ls -la
         python --version
         pip --version
 
@@ -57,28 +63,22 @@ jobs:
         python -c "import sqlmodel; print(f'SQLModel: {sqlmodel.__version__}')"
         python -c "import sqlalchemy; print(f'SQLAlchemy: {sqlalchemy.__version__}')"
         echo ""
-        echo "=== Inspecting BudgetBill table structure ==="
+        echo "=== Checking BudgetBill foreign keys ==="
         python -c "
-        from app.models.database import Budget, BudgetBill
-        from sqlalchemy import inspect as sa_inspect
-        
-        # Check the table columns for BudgetBill
-        print('\n--- BudgetBill Model Fields ---')
-        for field_name, field in BudgetBill.__fields__.items():
-            field_info = field.field_info
-            print(f'{field_name}: {field.outer_type_}')
-            if hasattr(field_info, 'foreign_key') and field_info.foreign_key:
-                print(f'  -> foreign_key: {field_info.foreign_key}')
+        from app.models.database import BudgetBill
         
         # Check SQLAlchemy table metadata
-        print('\n--- BudgetBill SQLAlchemy Table Info ---')
         if hasattr(BudgetBill, '__table__'):
             table = BudgetBill.__table__
             print(f'Table name: {table.name}')
-            print('Foreign keys:')
-            for fk in table.foreign_keys:
-                print(f'  {fk.parent} -> {fk.column}')
-        " || echo "Failed to inspect models"
+            print(f'Columns: {list(table.columns.keys())}')
+            print(f'Foreign keys in table:')
+            if table.foreign_keys:
+                for fk in table.foreign_keys:
+                    print(f'  {fk}')
+            else:
+                print('  NO FOREIGN KEYS FOUND!')
+        " || echo "Failed to check table structure"
 
     - name: Run pytest
       run: |
