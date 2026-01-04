@@ -43,15 +43,15 @@ jobs:
       with:
         context: .
         push: true
-        tags: ghcr.io/${{ github.repository }}:${{ github.sha }},ghcr.io/${{ github.repository }}:latest
+        tags: ghcr.io/${{ github.repository_owner }}/mybudget:${{ github.sha }},ghcr.io/${{ github.repository_owner }}/mybudget:latest
         no-cache: true
 
     - name: Output image URL to workflow summary
       run: |
         echo "## 📦 Docker Image Published" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "Image URL: \`ghcr.io/${{ github.repository }}:${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "Image URL: \`ghcr.io/${{ github.repository_owner }}/mybudget:${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "Latest tag: \`ghcr.io/${{ github.repository }}:latest\`" >> $GITHUB_STEP_SUMMARY
+        echo "Latest tag: \`ghcr.io/${{ github.repository_owner }}/mybudget:latest\`" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "View image: https://github.com/${{ github.repository }}/pkgs/container/${{ github.event.repository.name }}" >> $GITHUB_STEP_SUMMARY
+        echo "View image: https://github.com/${{ github.repository }}/pkgs/container/mybudget" >> $GITHUB_STEP_SUMMARY
