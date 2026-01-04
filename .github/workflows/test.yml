@@ -14,58 +14,16 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Build test image
-      uses: docker/build-push-action@v6
+    - name: Set up Python
+      uses: actions/setup-python@v4
       with:
-        context: .
-        file: ./Dockerfile
-        push: false
-        load: true
-        tags: mybudget:test
-        no-cache: true
+        python-version: '3.12'
 
-    - name: Verify package versions
+    - name: Install dependencies
       run: |
-        docker run --rm \
-          mybudget:test \
-          sh -c "python -c \"import sqlalchemy, sqlmodel; print(f'SQLAlchemy: {sqlalchemy.__version__}'); print(f'SQLModel: {sqlmodel.__version__}')\""
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
-    - name: Check database.py in Docker
+    - name: Run tests
       run: |
-        docker run --rm \
-          -v ${{ github.workspace }}:/app \
-          mybudget:test \
-          sh -c "grep -A 2 'budget_bills:' /app/app/models/database.py"
-
-    - name: Initialize database and load sample data
-      run: |
-        docker run --rm \
-          -v ${{ github.workspace }}:/app \
-          mybudget:test \
-          sh -c "cd /app && \
-                 python -m uvicorn main:app --host 0.0.0.0 --port 8000 & \
-                 API_PID=\$!; \
-                 echo 'API started with PID:' \$API_PID; \
-                 sleep 3; \
-                 echo 'Loading sample data...'; \
-                 python scripts/load_sample_data.py --api-url http://localhost:8000; \
-                 echo 'Sample data loaded successfully'; \
-                 kill \$API_PID 2>/dev/null || true; \
-                 sleep 1"
-
-    - name: Run tests in Docker
-      run: |
-        docker run --rm \
-          -v ${{ github.workspace }}:/app \
-          mybudget:test \
-          sh -c "cd /app && find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null; find . -name '*.pyc' -delete 2>/dev/null; pytest --tb=short -v"
-
-    - name: Run syntax check
-      run: |
-        docker run --rm \
-          -v ${{ github.workspace }}:/app \
-          mybudget:test \
-          sh -c "cd /app && find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null; find . -name '*.pyc' -delete 2>/dev/null; pytest tests/test_syntax.py -v"
+        pytest --tb=short -v
