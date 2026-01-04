@@ -66,6 +66,8 @@ class Account(SQLModel, table=True):
         created_at: Creation timestamp (stored in UTC)
         updated_at: Last update timestamp (stored in UTC)
     """
+    __tablename__ = "account"
+    
     id: Optional[UUID7] = Field(default_factory=uuid7, primary_key=True, sa_type=GUID)
     name: str = Field(index=True)
     account_type: str  # JSON stored account type (name and description)
@@ -92,6 +94,8 @@ class Category(SQLModel, table=True):
         created_at: Creation timestamp (stored in UTC)
         updated_at: Last update timestamp (stored in UTC)
     """
+    __tablename__ = "category"
+    
     id: Optional[UUID7] = Field(default_factory=uuid7, primary_key=True, sa_type=GUID)
     name: str = Field(index=True, unique=True)
     description: Optional[str] = None
@@ -106,6 +110,8 @@ class Category(SQLModel, table=True):
 
 class Bill(SQLModel, table=True):
     """Bills linked to an account."""
+    __tablename__ = "bill"
+    
     id: Optional[UUID7] = Field(default_factory=uuid7, primary_key=True, sa_type=GUID)
     account_id: UUID7 = Field(foreign_key="account.id", sa_type=GUID)
     category_id: Optional[UUID7] = Field(default=None, foreign_key="category.id", sa_type=GUID)
@@ -127,6 +133,8 @@ class Bill(SQLModel, table=True):
 
 class Income(SQLModel, table=True):
     """Income sources linked to an account."""
+    __tablename__ = "income"
+    
     id: Optional[UUID7] = Field(default_factory=uuid7, primary_key=True, sa_type=GUID)
     account_id: UUID7 = Field(foreign_key="account.id", sa_type=GUID)
     name: str = Field(index=True)
@@ -155,6 +163,8 @@ class Transactions(SQLModel, table=True):
 
 class Budget(SQLModel, table=True):
     """Monthly budgets for planning expenses."""
+    __tablename__ = "budget"
+    
     id: Optional[UUID7] = Field(default_factory=uuid7, primary_key=True, sa_type=GUID)
     name: str = Field(index=True)
     start_date: datetime = Field(default_factory=utc_now)
@@ -177,7 +187,7 @@ class BudgetBill(SQLModel, table=True):
     __tablename__ = "budgetbill"
     
     id: Optional[UUID7] = Field(default_factory=uuid7, primary_key=True, sa_type=GUID)
-    budget_id: UUID7 = Field(foreign_key="budget.id", sa_type=GUID)
+    budget_id: UUID7 = Field(foreign_key="budget.id", sa_type=GUID, index=True)
     bill_id: UUID7 = Field(foreign_key="bill.id", sa_type=GUID)
     account_id: UUID7 = Field(foreign_key="account.id", sa_type=GUID)
     transfer_account_id: Optional[UUID7] = Field(default=None, foreign_key="account.id", sa_type=GUID)
