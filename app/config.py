@@ -1,11 +1,20 @@
 from typing import Set
 import os
+from pathlib import Path
 from pydantic_settings import BaseSettings
+
+
+def get_version() -> str:
+    """Read version from version.txt file"""
+    version_file = Path(__file__).parent.parent / "version.txt"
+    if version_file.exists():
+        return version_file.read_text().strip()
+    return "1.0.0"
 
 
 class Settings(BaseSettings):
     APP_NAME: str = "MyBudget"
-    APP_VERSION: str = "1.0.0"
+    APP_VERSION: str = get_version()
     APP_DESCRIPTION: str = "A simple personal finance management application."
     POSTGRESQL_HOSTNAME: str = "localhost"
     POSTGRESQL_USERNAME: str = "postgres"
