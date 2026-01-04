@@ -51,25 +51,34 @@ jobs:
         pip install -r requirements.txt
         pip install pytest pytest-cov pytest-httpx
 
-    - name: Debug - Check package versions and model import
+    - name: Debug - Check package versions and model structure
       run: |
         echo "=== SQLModel and SQLAlchemy versions ==="
         python -c "import sqlmodel; print(f'SQLModel: {sqlmodel.__version__}')"
         python -c "import sqlalchemy; print(f'SQLAlchemy: {sqlalchemy.__version__}')"
         echo ""
-        echo "=== Testing Budget model import ==="
+        echo "=== Inspecting BudgetBill table structure ==="
         python -c "
         from app.models.database import Budget, BudgetBill
-        import inspect
-        print('Budget model imported successfully')
-        print('Budget.budget_bills:', Budget.__dict__.get('budget_bills'))
-        # Try to get the relationship info
-        try:
-            from sqlmodel import inspect as sm_inspect
-            print('Relationship details:', inspect.getmembers(Budget.budget_bills))
-        except Exception as e:
-            print(f'Error inspecting relationship: {e}')
-        " || echo "Failed to import models"
+        from sqlalchemy import inspect as sa_inspect
+        
+        # Check the table columns for BudgetBill
+        print('\n--- BudgetBill Model Fields ---')
+        for field_name, field in BudgetBill.__fields__.items():
+            field_info = field.field_info
+            print(f'{field_name}: {field.outer_type_}')
+            if hasattr(field_info, 'foreign_key') and field_info.foreign_key:
+                print(f'  -> foreign_key: {field_info.foreign_key}')
+        
+        # Check SQLAlchemy table metadata
+        print('\n--- BudgetBill SQLAlchemy Table Info ---')
+        if hasattr(BudgetBill, '__table__'):
+            table = BudgetBill.__table__
+            print(f'Table name: {table.name}')
+            print('Foreign keys:')
+            for fk in table.foreign_keys:
+                print(f'  {fk.parent} -> {fk.column}')
+        " || echo "Failed to inspect models"
 
     - name: Run pytest
       run: |
