@@ -40,6 +40,13 @@ jobs:
           mybudget:test \
           sh -c "grep -A 2 'budget_bills:' /app/app/models/database.py"
 
+    - name: Initialize database and load sample data
+      run: |
+        docker run --rm \
+          -v ${{ github.workspace }}:/app \
+          mybudget:test \
+          sh -c "cd /app && python -c 'from app.models.database import create_db_and_tables; create_db_and_tables(); print(\"Database initialized successfully\")\'"
+
     - name: Run tests in Docker
       run: |
         docker run --rm \
