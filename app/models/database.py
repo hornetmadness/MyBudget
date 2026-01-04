@@ -17,7 +17,7 @@ Timezones are configured via the 'timezone' application setting.
 
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship, create_engine, Session, select
-from sqlalchemy import String, TypeDecorator
+from sqlalchemy import String, TypeDecorator, ForeignKey
 from datetime import datetime, timezone, timedelta
 from uuid import UUID
 from uuid_utils import uuid7
@@ -165,8 +165,11 @@ class Budget(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
     
-    # Relationships
-    budget_bills: List["BudgetBill"] = Relationship(back_populates="budget")
+    # Relationships - explicitly define the join condition
+    budget_bills: List["BudgetBill"] = Relationship(
+        back_populates="budget",
+        sa_relationship_kwargs={"foreign_keys": "[BudgetBill.budget_id]"}
+    )
 
 
 class BudgetBill(SQLModel, table=True):

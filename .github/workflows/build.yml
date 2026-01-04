@@ -23,6 +23,17 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+
+    - name: Verify Python environment
+      run: |
+        python --version
+        pip --version
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
