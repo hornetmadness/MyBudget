@@ -44,10 +44,6 @@ jobs:
         echo ""
         echo "=== Checking imports in database.py ==="
         head -30 app/models/database.py
-        echo ""
-        echo "=== SQLModel and SQLAlchemy versions ==="
-        python -c "import sqlmodel; print(f'SQLModel: {sqlmodel.__version__}')"
-        python -c "import sqlalchemy; print(f'SQLAlchemy: {sqlalchemy.__version__}')"
 
     - name: Install dependencies
       run: |
@@ -55,8 +51,12 @@ jobs:
         pip install -r requirements.txt
         pip install pytest pytest-cov pytest-httpx
 
-    - name: Debug - Test model import
+    - name: Debug - Check package versions and model import
       run: |
+        echo "=== SQLModel and SQLAlchemy versions ==="
+        python -c "import sqlmodel; print(f'SQLModel: {sqlmodel.__version__}')"
+        python -c "import sqlalchemy; print(f'SQLAlchemy: {sqlalchemy.__version__}')"
+        echo ""
         echo "=== Testing Budget model import ==="
         python -c "
         from app.models.database import Budget, BudgetBill
@@ -67,8 +67,8 @@ jobs:
         try:
             from sqlmodel import inspect as sm_inspect
             print('Relationship details:', inspect.getmembers(Budget.budget_bills))
-        except:
-            pass
+        except Exception as e:
+            print(f'Error inspecting relationship: {e}')
         " || echo "Failed to import models"
 
     - name: Run pytest
