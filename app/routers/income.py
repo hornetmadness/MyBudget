@@ -93,7 +93,7 @@ def get_income_by_account(account_id: UUID, session: Session = Depends(get_sessi
         raise HTTPException(status_code=404, detail="Account not found")
     
     statement = select(Income).where(
-        (Income.account_id == str(account_id)) & (Income.deleted == False)
+        (Income.account_id == account_id) & (Income.deleted == False)
     )
     income_sources = session.exec(statement).all()
     return [

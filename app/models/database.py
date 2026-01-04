@@ -17,7 +17,9 @@ Timezones are configured via the 'timezone' application setting.
 
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship, create_engine, Session, select
-from sqlalchemy import String, TypeDecorator, ForeignKey
+from sqlalchemy import String, TypeDecorator, ForeignKey, Column, ForeignKeyConstraint, event, Engine, and_
+from sqlalchemy.orm import foreign
+from sqlalchemy.pool import Pool
 from datetime import datetime, timezone, timedelta
 from uuid import UUID
 from uuid_utils import uuid7
@@ -175,8 +177,14 @@ class Budget(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
     
-    # Relationships - explicitly define the join condition
-    budget_bills: List["BudgetBill"] = Relationship(back_populates="budget")
+    # Relationships - explicitly specify primaryjoin to work around Docker SQLAlchemy issue
+    budget_bills: List["BudgetBill"] = Relationship(
+        back_populates="budget",
+        sa_relationship_kwargs={
+            "primaryjoin": lambda: Budget.id == BudgetBill.budget_id,
+            "foreign_keys": lambda: [BudgetBill.budget_id],
+        }
+    )
 
 
 class BudgetBill(SQLModel, table=True):
@@ -184,7 +192,14 @@ class BudgetBill(SQLModel, table=True):
     __tablename__ = "budgetbill"
     
     id: Optional[UUID7] = Field(default_factory=uuid7, primary_key=True, sa_type=GUID)
-    budget_id: UUID7 = Field(foreign_key="budget.id", sa_type=GUID, index=True)
+    budget_id: UUID7 = Field(
+        sa_column=Column(
+            "budget_id",
+            GUID,
+            ForeignKey("budget.id", ondelete="CASCADE"),
+            index=True
+        )
+    )
     bill_id: UUID7 = Field(foreign_key="bill.id", sa_type=GUID)
     account_id: UUID7 = Field(foreign_key="account.id", sa_type=GUID)
     transfer_account_id: Optional[UUID7] = Field(default=None, foreign_key="account.id", sa_type=GUID)
@@ -196,8 +211,13 @@ class BudgetBill(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
     
-    # Relationships
-    budget: Optional[Budget] = Relationship(back_populates="budget_bills")
+    # Relationships - use explicit foreign key wrapper for Docker compatibility
+    budget: Optional[Budget] = Relationship(
+        back_populates="budget_bills",
+        sa_relationship_kwargs={
+            "primaryjoin": lambda: foreign(BudgetBill.budget_id) == Budget.id
+        }
+    )
 
 
 class ApplicationSettings(SQLModel, table=True):
@@ -218,6 +238,16 @@ engine = create_engine(
     connect_args={"check_same_thread": False},
     echo=True
 )
+
+
+# Enable foreign key support for SQLite
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_conn, connection_record):
+    """Enable foreign key constraints for SQLite."""
+    if DATABASE_URL.startswith("sqlite"):
+        cursor = dbapi_conn.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
 
 
 def create_db_and_tables():
