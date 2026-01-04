@@ -927,6 +927,14 @@ def build_budgets_tab(ui, requests, API_URL, _refresh_dashboard_ref, register_re
                                                             return
                                                         ui.notify(f"Marked {bill_name} as paid", type="positive")
                                                         refresh_budget_bills(budget_id)
+
+                                                        # Refresh transactions so new debit/credit entries appear immediately
+                                                        for cb in _refresh_transactions_ref:
+                                                            try:
+                                                                cb()
+                                                            except Exception:
+                                                                # Ignore individual refresh errors to avoid blocking UI
+                                                                pass
                                                     except Exception as e:
                                                         ui.notify(f"Error: {str(e)}", type="negative")
 
