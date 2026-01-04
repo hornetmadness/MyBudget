@@ -1,0 +1,23 @@
+[please-release]
+# Please-Release configuration for automated versioning and changelog
+
+# The GitHub token to use for API calls (will use GITHUB_TOKEN)
+# GitHub repository information will be auto-detected
+
+# Commit message template for version updates
+commit-msg = "chore: bump version to {version}"
+
+# Tag format for releases
+tag = "v{version}"
+
+# Changelog file to maintain
+changelog = "CHANGELOG.md"
+
+# Version file to update (will update APP_VERSION)
+version-file = "app/config.py"
+
+# Pattern to match version string in version-file
+version-pattern = 'APP_VERSION: str = "{version}"'
+
+# Branch to create PRs against
+release-branch = "main"

@@ -11,7 +11,7 @@ MyBudget is a simple personal finance manager with a FastAPI backend and a NiceG
 - Sample data loader for quick demos
 
 ## Requirements
-- Python 3.11+ (recommended)
+- Python 3.12+ (recommended)
 - pip
 
 ## Setup

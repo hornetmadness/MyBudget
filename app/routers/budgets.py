@@ -12,13 +12,13 @@ The system prevents overlapping budget periods. All dates are stored
 in UTC internally and converted to app timezone for display.
 """
 
-from datetime import timedelta, timezone, datetime
+from datetime import timedelta, timezone, datetime, date
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from uuid import UUID
 from app.models.database import Budget, BudgetBill, Account, Bill, Transactions, ApplicationSettings, get_session
 from app.models.schemas import BudgetCreate, BudgetUpdate, BudgetBillCreate, BudgetBillUpdate
-from app.utils import utc_now, to_utc
+from app.utils import utc_now, to_utc, ensure_aware_utc
 
 # Type alias for UUID7
 UUID7 = UUID
@@ -43,21 +43,29 @@ def create_budget(budget: BudgetCreate, session: Session = Depends(get_session))
     Raises:
         HTTPException: 400 if budget overlaps with existing budget
     """
-    # Normalize new budget dates to UTC for storage
-    new_start = to_utc(budget.start_date)
-    new_end = to_utc(budget.end_date)
+    # Normalize new budget dates to UTC for storage (ensure aware)
+    new_start = ensure_aware_utc(to_utc(budget.start_date))
+    new_end = ensure_aware_utc(to_utc(budget.end_date))
+    new_start_ts = new_start.timestamp()
+    new_end_ts = new_end.timestamp()
     
     # Check for overlapping budgets
     # A budget overlaps if it starts before another ends AND ends after another starts
     existing_budgets = session.exec(select(Budget)).all()
     
     for existing in existing_budgets:
-        existing_start = existing.start_date
-        existing_end = existing.end_date
-        
-        # Check if new budget overlaps with existing budget
+        existing_start = ensure_aware_utc(existing.start_date)
+        existing_end = ensure_aware_utc(existing.end_date)
+
+        if not existing_start or not existing_end:
+            continue
+
+        es_ts = existing_start.timestamp()
+        ee_ts = existing_end.timestamp()
+
+        # Check if new budget overlaps with existing budget using UTC timestamps
         # Overlap occurs if: new_start < existing_end AND new_end > existing_start
-        if new_start < existing_end and new_end > existing_start:
+        if new_start_ts < ee_ts and new_end_ts > es_ts:
             raise HTTPException(
                 status_code=400,
                 detail=f"Budget overlaps with existing budget '{existing.name}' (from {existing.start_date.date()} to {existing.end_date.date()})"
@@ -101,15 +109,26 @@ def update_budget(
     
     # If dates are being updated, check for overlaps with other budgets
     if budget_update.start_date or budget_update.end_date:
-        new_start_date = to_utc(budget_update.start_date) if budget_update.start_date else budget.start_date
-        new_end_date = to_utc(budget_update.end_date) if budget_update.end_date else budget.end_date
+        new_start_date = ensure_aware_utc(to_utc(budget_update.start_date) if budget_update.start_date else budget.start_date)
+        new_end_date = ensure_aware_utc(to_utc(budget_update.end_date) if budget_update.end_date else budget.end_date)
+        new_start_ts = new_start_date.timestamp()
+        new_end_ts = new_end_date.timestamp()
         
         # Check for overlapping budgets (excluding the current one)
         existing_budgets = session.exec(select(Budget).where(Budget.id != budget_id)).all()
         
         for existing in existing_budgets:
-            # Check if updated budget would overlap with existing budget
-            if new_start_date < existing.end_date and new_end_date > existing.start_date:
+            existing_start = ensure_aware_utc(existing.start_date)
+            existing_end = ensure_aware_utc(existing.end_date)
+
+            if not existing_start or not existing_end:
+                continue
+
+            es_ts = existing_start.timestamp()
+            ee_ts = existing_end.timestamp()
+
+            # Check if updated budget would overlap with existing budget (UTC timestamps)
+            if new_start_ts < ee_ts and new_end_ts > es_ts:
                 raise HTTPException(
                     status_code=400,
                     detail=f"Budget would overlap with existing budget '{existing.name}' (from {existing.start_date.date()} to {existing.end_date.date()})"

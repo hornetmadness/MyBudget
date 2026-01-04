@@ -1,8 +1,8 @@
 """Utility functions for timezone management and datetime operations."""
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, date
 from zoneinfo import ZoneInfo
-from typing import Optional
+from typing import Optional, Union
 
 
 def get_app_timezone(tz_name: str = "UTC") -> ZoneInfo:
@@ -80,4 +80,32 @@ def to_utc(dt: datetime) -> datetime:
         return dt.replace(tzinfo=timezone.utc)
     
     # Convert to UTC
+    return dt.astimezone(timezone.utc)
+
+
+def ensure_aware_utc(dt: Union[datetime, date, None]) -> Optional[datetime]:
+    """Coerce date/datetime to timezone-aware UTC datetime for safe comparisons.
+    
+    This function ensures that any date or datetime object is converted to a
+    timezone-aware UTC datetime. This is essential for safe datetime comparisons
+    and prevents "can't compare offset-naive and offset-aware datetimes" errors.
+    
+    Args:
+        dt: A datetime, date, or None
+    
+    Returns:
+        Timezone-aware UTC datetime, or None if input is None
+    """
+    if dt is None:
+        return None
+    
+    # Convert date to datetime at midnight
+    if isinstance(dt, date) and not isinstance(dt, datetime):
+        dt = datetime.combine(dt, datetime.min.time())
+    
+    # Make naive datetimes timezone-aware (assume UTC)
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    
+    # Convert aware datetimes to UTC
     return dt.astimezone(timezone.utc)
