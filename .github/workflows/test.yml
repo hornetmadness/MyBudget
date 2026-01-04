@@ -25,17 +25,18 @@ jobs:
         push: false
         load: true
         tags: mybudget:test
+        no-cache: true
 
     - name: Run tests in Docker
       run: |
         docker run --rm \
           -v ${{ github.workspace }}:/app \
           mybudget:test \
-          sh -c "cd /app && pytest --tb=short -v"
+          sh -c "cd /app && find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null; find . -name '*.pyc' -delete 2>/dev/null; pytest --tb=short -v"
 
     - name: Run syntax check
       run: |
         docker run --rm \
           -v ${{ github.workspace }}:/app \
           mybudget:test \
-          sh -c "cd /app && pytest tests/test_syntax.py -v"
+          sh -c "cd /app && find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null; find . -name '*.pyc' -delete 2>/dev/null; pytest tests/test_syntax.py -v"
