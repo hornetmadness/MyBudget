@@ -1,0 +1,22 @@
+services:
+  api:
+    build: .
+    container_name: mybudget-api
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      - API_URL=http://api:8000
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  ui:
+    build: .
+    container_name: mybudget-ui
+    command: ["python", "run_ui.py"]
+    environment:
+      - API_URL=http://api:8000
+    depends_on:
+      - api
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
