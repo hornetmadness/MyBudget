@@ -10,80 +10,32 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.12']
-    
-    defaults:
-      run:
-        working-directory: ${{ github.workspace }}
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build test image
+      uses: docker/build-push-action@v6
       with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
+        context: .
+        file: ./Dockerfile
+        push: false
+        load: true
+        tags: mybudget:test
 
-    - name: Clear Python cache
+    - name: Run tests in Docker
       run: |
-        find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
-        find . -name "*.pyc" -delete 2>/dev/null || true
-
-    - name: Verify Python version
-      run: |
-        pwd
-        ls -la
-        python --version
-        pip --version
-
-    - name: Debug - Check Git commit and file contents
-      run: |
-        echo "=== Git commit info ==="
-        git log -1 --oneline
-        git log -1 --stat
-        echo ""
-        echo "=== Checking Budget model relationship ==="
-        grep -A 5 "budget_bills.*Relationship" app/models/database.py || echo "Pattern not found"
-        echo ""
-        echo "=== Checking imports in database.py ==="
-        head -30 app/models/database.py
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest pytest-cov pytest-httpx
-
-    - name: Debug - Check package versions and model structure
-      run: |
-        echo "=== SQLModel and SQLAlchemy versions ==="
-        python -c "import sqlmodel; print(f'SQLModel: {sqlmodel.__version__}')"
-        python -c "import sqlalchemy; print(f'SQLAlchemy: {sqlalchemy.__version__}')"
-        echo ""
-        echo "=== Checking BudgetBill foreign keys ==="
-        python -c "
-        from app.models.database import BudgetBill
-        
-        # Check SQLAlchemy table metadata
-        if hasattr(BudgetBill, '__table__'):
-            table = BudgetBill.__table__
-            print(f'Table name: {table.name}')
-            print(f'Columns: {list(table.columns.keys())}')
-            print(f'Foreign keys in table:')
-            if table.foreign_keys:
-                for fk in table.foreign_keys:
-                    print(f'  {fk}')
-            else:
-                print('  NO FOREIGN KEYS FOUND!')
-        " || echo "Failed to check table structure"
-
-    - name: Run pytest
-      run: |
-        pytest --tb=short -v
+        docker run --rm \
+          -v ${{ github.workspace }}:/app \
+          mybudget:test \
+          sh -c "cd /app && pytest --tb=short -v"
 
     - name: Run syntax check
       run: |
-        pytest tests/test_syntax.py -v
+        docker run --rm \
+          -v ${{ github.workspace }}:/app \
+          mybudget:test \
+          sh -c "cd /app && pytest tests/test_syntax.py -v"
