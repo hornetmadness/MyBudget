@@ -378,16 +378,13 @@ def build_accounts_tab(ui, requests, API_URL, _refresh_dashboard_ref, register_r
 
         # Get account type - it's already parsed in the table row
         acct_type = account.get("account_type", "Checking")
-
-        # Capitalize first letter to match select options
+        # Normalize to title case to match select options
         if acct_type:
-            acct_type = acct_type.capitalize()
-
+            acct_type = acct_type.title()
         # Ensure it matches one of our options
-        valid_types = ["Checking", "Savings", "Investment", "Cash", "Credit card", "Personal loan", "Debit card", "Store card", "Mortgage", "Auto loan", "Student loan", "Line of credit", "Money market", "Certificate of deposit", "Retirement account", "Brokerage account", "Health savings account", "Paypal", "Cryptocurrency wallet"]
+        valid_types = [opt for opt in edit_type.options]
         if acct_type not in valid_types:
             acct_type = "Checking"
-
         edit_type.value = acct_type
         edit_type.update()
         edit_description.value = account.get("description", "")
