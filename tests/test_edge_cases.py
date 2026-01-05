@@ -173,7 +173,7 @@ def test_biweekly_bill_frequency_pattern(client: TestClient, account_setup, cate
 def test_all_frequency_types(client: TestClient, account_setup, category_setup):
     """Test all frequency types mentioned in USER.md.
     
-    Frequency types: Monthly, Weekly, Biweekly, Bimonthly, Daily, Once, Yearly, Always
+    Frequency types: Monthly, Weekly, Biweekly, Semimonthly, Daily, Once, Yearly, Always
     """
     account_id = account_setup
     category_id = category_setup
@@ -182,7 +182,7 @@ def test_all_frequency_types(client: TestClient, account_setup, category_setup):
         ("monthly", "Monthly Bill"),
         ("weekly", "Weekly Bill"),
         ("biweekly", "Biweekly Bill"),
-        ("bimonthly", "Bimonthly Bill"),
+        ("semimonthly", "Semimonthly Bill"),
         ("daily", "Daily Bill"),
         ("once", "One-time Bill"),
         ("yearly", "Yearly Bill"),
@@ -213,7 +213,7 @@ def test_income_frequency_types(client: TestClient, account_setup):
         ("monthly", "Monthly Salary"),
         ("biweekly", "Biweekly Paycheck"),
         ("weekly", "Weekly Freelance"),
-        ("bimonthly", "Bimonthly Payment"),
+        ("semimonthly", "Semimonthly Payment"),
         ("daily", "Daily Tips"),
         ("once", "Bonus"),
         ("yearly", "Annual Dividend"),

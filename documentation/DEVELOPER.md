@@ -890,7 +890,7 @@ ONCE = "once"         # One-time only
 DAILY = "daily"       # Every day
 WEEKLY = "weekly"     # Every 7 days
 BIWEEKLY = "biweekly" # Every 14 days
-BIMONTHLY = "bimonthly" # Twice per month
+SEMIMONTHLY = "semimonthly" # Twice per month
 MONTHLY = "monthly"   # Every month
 YEARLY = "yearly"     # Every year
 ```

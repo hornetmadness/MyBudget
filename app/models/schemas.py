@@ -44,26 +44,30 @@ class AccountTypeModel(BaseModel):
 
 class FrequencyEnum(str, Enum):
     """Frequency options for recurring transactions.
-    
+
     Defines how often bills or income repeat. Used for scheduling
     and payment tracking.
-    
+
     Values:
         ALWAYS: Continuous/unscheduled
         ONCE: One-time occurrence
         DAILY: Every day
         WEEKLY: Every 7 days
-        BIWEEKLY: Every 14 days
-        BIMONTHLY: Twice per month
+        BIWEEKLY: Every 14 days (26 times per year, e.g., every other Friday)
+        SEMIMONTHLY: Twice per month on specific dates (typically 1st and 15th, 24 times per year)
         MONTHLY: Once per month
         YEARLY: Once per year
+
+    Note:
+        - BIWEEKLY: Every 14 days, not tied to specific days of the month.
+        - SEMIMONTHLY: On two fixed days per month, e.g., 1st and 15th.
     """
     ALWAYS = "always"
     ONCE = "once"
     DAILY = "daily"
     WEEKLY = "weekly"
     BIWEEKLY = "biweekly"
-    BIMONTHLY = "bimonthly"
+    SEMIMONTHLY = "semimonthly"
     MONTHLY = "monthly"
     YEARLY = "yearly"
 
