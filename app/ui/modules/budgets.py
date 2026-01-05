@@ -410,11 +410,11 @@ def build_budgets_tab(ui, requests, API_URL, _refresh_dashboard_ref, register_re
             elif frequency == "biweekly":
                 if days_since_start % 14 == 0:
                     return float(income.get("amount", 0.0))
-            elif frequency == "bimonthly":
-                # Every 2 months from start date
-                month_diff = (date.year - start_freq.year) * 12 + (date.month - start_freq.month)
-                if month_diff % 2 == 0 and date.day == start_freq.day:
+            elif frequency == "semimonthly":
+                # Semimonthly: occurs on 1st and 15th of each month
+                if date.day in (1, 15):
                     return float(income.get("amount", 0.0))
+                return 0.0
             elif frequency == "monthly":
                 # Same day each month
                 if date.day == start_freq.day:

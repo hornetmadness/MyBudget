@@ -664,9 +664,9 @@ def build_accounts_tab(ui, requests, API_URL, _refresh_dashboard_ref, register_r
                         is_due = (days_since_start % 7 == 0)
                     elif frequency == "biweekly":
                         is_due = (days_since_start % 14 == 0)
-                    elif frequency == "bimonthly":
-                        month_diff = (check_date.year - start_freq.year) * 12 + (check_date.month - start_freq.month)
-                        is_due = (month_diff % 2 == 0 and check_date.day == start_freq.day)
+                    elif frequency == "semimonthly":
+                        # Semimonthly: due on 1st and 15th of each month
+                        is_due = check_date.day in (1, 15)
                     elif frequency == "monthly":
                         is_due = (check_date.day == start_freq.day)
                     elif frequency == "yearly":
@@ -734,7 +734,7 @@ def build_accounts_tab(ui, requests, API_URL, _refresh_dashboard_ref, register_r
             income_amount_input = ui.number(label="Amount", format="%.2f", value=0.0)
             income_frequency_select = ui.select(
                 label="Frequency",
-                options=["daily", "weekly", "biweekly", "bimonthly", "monthly", "yearly"],
+                options=["daily", "weekly", "biweekly", "semimonthly", "monthly", "yearly"],
                 value="monthly"
             )
 

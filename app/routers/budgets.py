@@ -245,8 +245,9 @@ def add_bill_to_budget(
                 return dt + timedelta(days=7)
             if freq == "biweekly":
                 return dt + timedelta(days=14)
-            if freq == "bimonthly":
-                return add_months(dt, 2)
+            if freq == "semimonthly":
+                # Custom logic for semimonthly (twice per month) if needed
+                return add_months(dt, 1)  # Placeholder: adjust as needed
             if freq == "monthly":
                 return add_months(dt, 1)
             if freq == "yearly":
