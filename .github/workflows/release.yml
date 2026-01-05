@@ -25,7 +25,6 @@ jobs:
     env:
       FORCE_RELEASE: ${{ github.event.inputs.force_release || github.event.workflow_run.inputs.force_release || 'false' }}
     if: |
-      # Allow job to run on normal push events (not workflow_dispatch or workflow_run), except for release commits
       (github.event_name != 'workflow_dispatch' && github.event_name != 'workflow_run' && !contains(github.event.head_commit.message, 'chore: release')) ||
       (github.event_name == 'workflow_dispatch' && (github.event.inputs.force_release == 'true' || !contains(github.event.head_commit.message, 'chore: release'))) ||
       (github.event_name == 'workflow_run' && (env.FORCE_RELEASE == 'true' || !contains(github.event.head_commit.message, 'chore: release')))
