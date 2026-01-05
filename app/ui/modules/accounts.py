@@ -186,7 +186,12 @@ def build_accounts_tab(ui, requests, API_URL, _refresh_dashboard_ref, register_r
 
     create_account_btn.on_click(open_create_account_dialog)
 
+    from app.ui.global_dialogs import setup_test_frequency_dialog
     with ui.card().classes("w-full max-w-4xl"):
+        test_freq_dialog, open_test_freq_dialog = setup_test_frequency_dialog(ui, title="Test Income Frequency")
+        with ui.row().classes("items-center justify-start w-full mb-2 mt-4"):
+            ui.button("Test frequency", color="accent", on_click=open_test_freq_dialog)
+
         ui.label("Accounts").classes("text-lg font-semibold mb-2")
 
         table = ui.table(

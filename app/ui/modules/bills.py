@@ -54,6 +54,7 @@ def update_bill(
     update_scope: str | None = None,
     account_id: str | None = None,
     category_id: str | None = None,
+    transfer_account_id: str | None = None,
 ) -> bool:
     """Update an existing bill via API.
     
@@ -89,6 +90,8 @@ def update_bill(
         payload["account_id"] = account_id
     if category_id is not None:
         payload["category_id"] = category_id
+    if transfer_account_id:
+        payload["transfer_account_id"] = transfer_account_id
     resp = req.patch(f"{API_URL}/bills/{bill_id}", json=payload)
     if resp.status_code != 200:
         return False
@@ -299,6 +302,12 @@ def build_bills_tab(ui, requests, API_URL, _refresh_dashboard_ref, register_refr
         create_bill_dialog.open()
 
     create_bill_btn.on_click(open_create_bill_dialog)
+
+
+    from app.ui.global_dialogs import setup_test_frequency_dialog
+    test_freq_dialog, open_test_freq_dialog = setup_test_frequency_dialog(ui, title="Test Bill Frequency")
+    with ui.row().classes("items-center justify-start w-full mb-2 mt-4"):
+        ui.button("Test frequency", color="accent", on_click=open_test_freq_dialog)
 
     ui.label("Bills")
 

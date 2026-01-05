@@ -1,15 +1,97 @@
 """Global dialogs and utilities accessible from all tabs."""
-
 import sys
 from pathlib import Path
-
 # Add repo root to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
+from app.ui.utils import fetch_accounts, parse_date, format_datetime, datetime as dtmod
 import requests
 from app.config import API_URL
-from app.ui.utils import fetch_accounts
 
+
+try:
+    from app.models.schemas import FrequencyEnum
+except ImportError:
+    from ..models.schemas import FrequencyEnum
+
+def setup_test_frequency_dialog(ui, title: str = "Test Income Frequency"):
+    """
+    Set up the global Test Frequency Helper dialog and return the open function.
+    Args:
+        ui: NiceGUI ui instance
+        title: Dialog title label text (default: 'Test Income Frequency')
+    Returns:
+        test_freq_dialog: The dialog instance
+        open_test_freq_dialog: Function to open the dialog
+    """
+    test_freq_dialog = ui.dialog()
+    with test_freq_dialog, ui.card().classes("w-full max-w-md"):
+        ui.label(title).classes("text-lg font-semibold mb-2")
+
+        test_freq_select = ui.select(
+            label="Frequency",
+            options=[freq.value for freq in FrequencyEnum],
+            value="monthly"
+        )
+        test_start_date_input = ui.input(label="Start Date (YYYY-MM-DD)").classes("w-full")
+        test_start_date_picker = ui.date(mask="YYYY-MM-DD").props("dense outlined").classes("w-full hidden")
+        def toggle_test_start_picker():
+            test_start_date_picker.classes(toggle="hidden")
+        test_start_date_input.on("click", toggle_test_start_picker)
+        def on_test_start_selected():
+            if test_start_date_picker.value:
+                date_str = test_start_date_picker.value.isoformat() if hasattr(test_start_date_picker.value, 'isoformat') else str(test_start_date_picker.value)
+                test_start_date_input.value = date_str
+                test_start_date_picker.classes(add="hidden")
+        test_start_date_picker.on_value_change(on_test_start_selected)
+        test_freq_results = ui.column().classes("gap-1 mt-2")
+        def run_test_frequency():
+            freq = test_freq_select.value
+            start_str = test_start_date_input.value
+            start_dt = parse_date(start_str)
+            if not start_dt:
+                test_freq_results.clear()
+                with test_freq_results:
+                    ui.label("Invalid start date").classes("text-red-600")
+                return
+            dates = []
+            current = start_dt
+            count = 0
+            while count < 12:
+                dates.append(format_datetime(current, "%Y-%m-%d"))
+                if freq == "weekly":
+                    current += dtmod.timedelta(days=7)
+                elif freq == "biweekly":
+                    current += dtmod.timedelta(days=14)
+                elif freq == "semimonthly":
+                    if current.day < 15:
+                        current = current.replace(day=15)
+                    else:
+                        month = current.month + 1 if current.month < 12 else 1
+                        year = current.year + 1 if month == 1 else current.year
+                        current = current.replace(year=year, month=month, day=1)
+                elif freq == "monthly":
+                    month = current.month + 1 if current.month < 12 else 1
+                    year = current.year + 1 if month == 1 else current.year
+                    try:
+                        current = current.replace(year=year, month=month)
+                    except ValueError:
+                        from calendar import monthrange
+                        last_day = monthrange(year, month)[1]
+                        current = current.replace(year=year, month=month, day=last_day)
+                elif freq == "yearly":
+                    current = current.replace(year=current.year + 1)
+                count += 1
+            test_freq_results.clear()
+            with test_freq_results:
+                ui.label("Next 12 Occurrences:").classes("font-semibold mb-1")
+                for d in dates:
+                    ui.label(d).classes("text-sm")
+        ui.button("Test Frequency", color="accent", on_click=run_test_frequency).classes("mt-2")
+        with test_freq_results:
+            ui.label("")
+    def open_test_freq_dialog():
+        test_freq_dialog.open()
+    return test_freq_dialog, open_test_freq_dialog
 
 def setup_budget_bill_edit_dialog(ui, requests, API_URL, _parse_date, _handle_error, _refresh_dashboard_ref, _refresh_budget_bills_ref, _refresh_transactions_ref):
     """

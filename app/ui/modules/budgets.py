@@ -11,6 +11,8 @@ This module provides comprehensive budget management including:
 """
 
 from typing import Any, Dict
+import datetime
+import app.ui.utils as ui_utils
 from datetime import timedelta
 import sys
 from pathlib import Path
@@ -261,9 +263,9 @@ def build_budgets_tab(ui, requests, API_URL, _refresh_dashboard_ref, register_re
             ui.button("Clone", on_click=clone_budget_submit).props("color=primary")
 
     def open_create_budget_dialog():
-        today = datetime.now(timezone.utc).date()
-        start_str = today.isoformat()
-        end_str = (today + timedelta(days=15)).isoformat()
+        today = ui_utils.datetime.datetime.now(ui_utils.datetime.timezone.utc).date()
+        start_str = ui_utils.format_date(ui_utils.datetime.datetime.combine(today, ui_utils.datetime.datetime.min.time()))
+        end_str = ui_utils.format_date(ui_utils.datetime.datetime.combine(today + timedelta(days=15), ui_utils.datetime.datetime.min.time()))
         budget_name_input.value = ""
         budget_description_input.value = ""
         budget_start_date_input.value = start_str
