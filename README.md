@@ -10,7 +10,20 @@ MyBudget is a simple personal finance manager with a FastAPI backend and a NiceG
 - Built-in docs endpoints: Swagger, ReDoc, user and developer guides
 - Sample data loader for quick demos
 - Idempotent bootstrap script for initial setup
-- Automated releases with release-please
+
+## Container Images
+
+Pre-built container images for MyBudget are available on GitHub Container Registry:
+
+- [https://github.com/hornetmadness/MyBudget/pkgs/container/mybudget](https://github.com/hornetmadness/MyBudget/pkgs/container/mybudget)
+
+You can pull the latest image with:
+
+```bash
+docker pull ghcr.io/hornetmadness/mybudget:latest
+```
+
+See the link above for available tags and usage instructions.
 
 ## Requirements
 - Python 3.12+ (recommended)

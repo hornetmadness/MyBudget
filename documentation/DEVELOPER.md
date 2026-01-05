@@ -25,6 +25,21 @@ Comprehensive technical documentation for developers working on MyBudget.
 
 ---
 
+
+## Container Images
+
+Pre-built container images for MyBudget are available on GitHub Container Registry:
+
+- [https://github.com/hornetmadness/MyBudget/pkgs/container/mybudget](https://github.com/hornetmadness/MyBudget/pkgs/container/mybudget)
+
+To pull the latest image:
+
+```bash
+docker pull ghcr.io/hornetmadness/mybudget:latest
+```
+
+See the link above for available tags and usage instructions.
+
 ## Project Overview
 
 MyBudget is a personal finance management application built with a modern Python stack. The application follows a clean separation between backend API (FastAPI), frontend UI (NiceGUI), and data persistence (SQLModel/SQLite).
