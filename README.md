@@ -9,10 +9,26 @@ MyBudget is a simple personal finance manager with a FastAPI backend and a NiceG
 - Settings for currency/format/timezone and pruning
 - Built-in docs endpoints: Swagger, ReDoc, user and developer guides
 - Sample data loader for quick demos
+- Idempotent bootstrap script for initial setup
+- Automated releases with release-please
 
 ## Requirements
 - Python 3.12+ (recommended)
 - pip
+
+## Quick Start
+
+```bash
+# Clone and setup
+git clone <repository-url>
+cd MyBudget
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+
+# Bootstrap with defaults (categories and settings)
+./scripts/setup.sh
+```
 
 ## Setup
 ```bash
