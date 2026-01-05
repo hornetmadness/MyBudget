@@ -1,5 +1,4 @@
 #!/bin/bash
-# Quick script to start the API server and load sample data
 
 set -e
 
@@ -10,7 +9,7 @@ echo ""
 if lsof -i :8000 > /dev/null 2>&1; then
     echo "⚠️  API is already running on port 8000"
     echo ""
-    read -p "Continue with loading sample data? (y/n) " -n 1 -r
+    read -p "Continue with bootstrapping (y/n) " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         exit 1
@@ -37,10 +36,10 @@ else
     echo ""
 fi
 
-# Load sample data
-echo "📦 Loading sample financial data..."
+# Load bootstrap data
+echo "📦 Loading bootstrap data..."
 cd "$(dirname "$0")/.."
-python scripts/load_sample_data.py
+python scripts/bootstrap.py
 
 echo ""
 echo "🎉 All done!"
@@ -50,3 +49,4 @@ echo "   1. Explore the API: http://localhost:8000/docs"
 echo "   2. View ReDoc: http://localhost:8000/redoc"
 echo "   3. Run tests: python -m pytest tests/ -v"
 echo ""
+

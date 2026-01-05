@@ -226,6 +226,9 @@ MyBudget/
 │   ├── test_income.py
 │   └── test_transactions.py
 ├── scripts/                     # Utility scripts
+│   ├── bootstrap.py            # Initialize app with defaults (idempotent)
+│   ├── bootstrap.sh            # Shell wrapper for bootstrap
+│   └── load_sample_data.py     # Load comprehensive test data
 ├── main.py                      # FastAPI application entry point
 ├── run_ui.py                    # NiceGUI UI server entry point
 ├── requirements.txt             # Python dependencies
@@ -244,10 +247,16 @@ MyBudget/
   - Configures lifespan events
   - Creates database tables on startup
 
+- **version.txt**: Application version
+  - Single source of truth for app versioning
+  - Used by CI/CD pipeline for Docker tagging
+  - Managed by release-please automation
+
 - **app/config.py**: Centralized configuration
   - Environment variables
-  - Application metadata (version, name, description)
+  - Application metadata (name, description)
   - Database connection settings
+  - Note: Version is now in `version.txt` instead of config
 
 #### Data Models
 
@@ -256,12 +265,6 @@ MyBudget/
   - UUID7 primary keys for distributed systems
   - Soft-delete pattern with `deleted` flag
   - UTC timestamps with automatic updates (configurable via timezone setting)
-
-- **app/utils.py**: Timezone utilities
-  - `utc_now()` - Get current time in UTC for storage
-  - `get_app_timezone()` - Get ZoneInfo from timezone name
-  - `to_utc()` - Convert datetime to UTC
-  - `to_app_tz()` - Convert datetime to app's configured timezone (configurable via timezone setting)
 
 - **app/utils.py**: Timezone utilities
   - `utc_now()` - Get current time in UTC for storage
@@ -335,6 +338,23 @@ pip install -r requirements.txt
 # Database will be created at mybudget.db
 ```
 
+### Quick Start with Bootstrap Script
+
+For a quick setup, use the bootstrap script which starts the API server and initializes the database:
+
+```bash
+# On macOS/Linux:
+./scripts/setup.sh
+
+# Or run directly with Python:
+python scripts/bootstrap.py
+```
+
+This will:
+1. Start the FastAPI server on port 8000 (if not already running)
+2. Initialize database with default categories
+3. Verify application settings
+
 ### Running the Application
 
 The application requires two servers running simultaneously:
@@ -392,6 +412,60 @@ On first startup, the application automatically:
 # Delete database file
 rm mybudget.db
 # Restart servers - fresh database will be created
+```
+
+### Bootstrap Script
+
+The bootstrap script (`scripts/bootstrap.py`) initializes the application with essential default data. It is **idempotent** and safe to run multiple times.
+
+**What It Does:**
+- Creates 11 default expense categories (Housing, Utilities, Transportation, etc.)
+- Initializes application settings with defaults:
+  - Currency Symbol: $
+  - Decimal Places: 2
+  - Number Format: comma
+  - Timezone: America/New_York
+  - Show Old Budgets: 3
+  - Prune Budgets After: 24 months
+
+**Usage:**
+
+```bash
+# Ensure FastAPI backend is running on port 8000
+uvicorn main:app --reload --port 8000
+
+# In another terminal, run the bootstrap script
+python scripts/bootstrap.py
+
+# Or specify a different API URL
+python scripts/bootstrap.py --api-url http://localhost:8000
+
+# Or use the shell wrapper (starts API server automatically)
+./scripts/bootstrap.sh
+```
+
+**Output Example:**
+```
+🚀 Bootstrapping MyBudget application...
+📡 API URL: http://localhost:8000
+
+🏷️  Setting up bill categories...
+   ✓ Created: Housing
+   ✓ Created: Utilities
+   ⊙ Skipped (already exists): Food & Groceries
+   ...
+
+⚙️  Verifying application settings...
+   ✓ Settings initialized:
+      Currency Symbol: $
+      Decimal Places: 2
+      Number Format: comma
+      Timezone: America/New_York
+      Show Old Budgets: 3
+      Prune Budgets After: 24 months
+
+✅ Bootstrap complete
+   Categories: 8 created, 3 already existed
 ```
 
 ### Loading Sample Data
@@ -1858,13 +1932,110 @@ Reviewers check for:
 - Security considerations
 - Performance implications
 
+---
+
+## CI/CD Pipeline
+
+### GitHub Actions Workflow (`.github/workflows/ci.yml`)
+
+The project uses GitHub Actions for automated testing and deployment.
+
+**Trigger Events:**
+- Push to `main` or `develop` branches
+- Pull requests to `main` or `develop`
+- Manual trigger via workflow_dispatch
+
+**Jobs:**
+
+#### 1. Test Job
+- **Runs on:** Ubuntu latest
+- **Steps:**
+  - Checkout code
+  - Set up Python 3.12
+  - Install dependencies from `requirements.txt`
+  - Run pytest: `pytest --tb=short -v`
+- **Output:** Test results and coverage
+- **Runs on:** All push/PR events
+
+#### 2. Build and Push Job
+- **Runs on:** Ubuntu latest
+- **Dependencies:** Requires `test` job to pass
+- **Triggers on:** Push to main/develop only (not PRs)
+- **Steps:**
+  - Checkout code
+  - Set up Docker Buildx
+  - Extract version from `version.txt`
+  - Log in to GitHub Container Registry (GHCR)
+  - Extract Docker metadata (tags, labels)
+  - Build and push image to GHCR: `ghcr.io/hornetmadness/mybudget`
+  - Output image URL to workflow summary
+- **Image Tags:**
+  - `latest` (on default branch push)
+  - `<version>` (from version.txt, on default branch)
+  - `<branch>` (branch name)
+  - `<sha>` (commit SHA)
+
+### Version Management
+
+**Version Source of Truth:** `version.txt`
+
+The CI workflow reads the version directly from `version.txt` for Docker image tagging:
+```bash
+VERSION=$(cat version.txt)
+```
+
+This ensures the Docker image version always matches the application version configured in `version.txt`.
+
+### Docker Image Registry
+
+- **Registry:** GitHub Container Registry (GHCR)
+- **Image:** `ghcr.io/hornetmadness/mybudget`
+- **Authentication:** Uses `GITHUB_TOKEN` (automatically available in GitHub Actions)
+- **Access:** Requires GitHub account with appropriate permissions
+
+### Local CI Testing
+
+To test the CI pipeline locally before pushing:
+
+```bash
+# Run tests
+pytest --tb=short -v
+
+# Build Docker image locally
+docker build -t mybudget:local .
+
+# Tag with version from version.txt
+VERSION=$(cat version.txt)
+docker tag mybudget:local mybudget:$VERSION
+```
+
+---
+
 ### Release Process
 
-1. Update version in `app/config.py`
-2. Update `DEVELOPER.md` and `USER.md` if needed
-3. Run full test suite
-4. Create git tag: `git tag v1.1.0`
-5. Push tag: `git push origin v1.1.0`
+The project uses [release-please](https://github.com/googleapis/release-please) for automated versioning and releases.
+
+**Version Source of Truth**: `version.txt` (previously `app/config.py`)
+
+**Release Workflow**:
+1. Commit changes to `main` branch
+2. release-please automatically creates a PR with:
+   - Updated `version.txt`
+   - Updated `.release-please-manifest.json`
+   - Changelog entries
+3. Merge the release PR
+4. GitHub Actions CI workflow automatically:
+   - Runs tests
+   - Builds Docker image with version tag from `version.txt`
+   - Publishes image to GHCR (ghcr.io/hornetmadness/mybudget)
+   - Creates a GitHub Release
+
+**Manual Override** (if needed):
+- Edit `version.txt` directly
+- Update `.release-please-manifest.json` to match
+- Push changes; release-please will respect the change on next run
+
+**Version Tag Format**: `v0.1.0` (automatically created from semantic versioning)
 
 ---
 

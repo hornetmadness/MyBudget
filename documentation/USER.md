@@ -100,6 +100,14 @@ MyBudget follows a natural financial management flow:
 
 ### Initial Setup (First Time Use)
 
+**Quick Start:**
+If you're using the bootstrap script, default categories and settings are automatically created for you. Simply run:
+```bash
+./scripts/setup.sh
+```
+
+**Manual Setup:**
+
 1. **Create Your Accounts** (Accounts Tab)
    - Add all your real-world accounts
    - Enter current balances
@@ -117,7 +125,8 @@ MyBudget follows a natural financial management flow:
    - Link to deposit accounts
 
 4. **Configure Categories** (Settings Tab)
-   - Create expense categories for organizing bills
+   - Default categories are created automatically (Housing, Utilities, Transportation, etc.)
+   - Create additional custom categories as needed
    - Examples: Utilities, Groceries, Entertainment, Transportation
 
 ### Monthly Workflow
